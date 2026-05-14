@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELKAN — Content Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f3ee;
+  --surface: #faf9f6;
+  --white: #ffffff;
+  --ink: #1a1916;
+  --ink2: #4a4843;
+  --ink3: #8a8880;
+  --rule: #e2dfd8;
+  --accent: #1a1916;
+  --green: #1a6b4a;
+  --green-bg: #edf5f0;
+  --amber: #7a5c1e;
+  --amber-bg: #faf3e0;
+  --red: #8a2020;
+  --red-bg: #fdf0f0;
+  --sport: #1a5c8a;
+  --art: #6b3a7a;
+  --fashion: #8a6b2a;
+  --gaming: #1a7a52;
+  --music: #8a2a2a;
+  --all: #1a1916;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-sans: 'DM Sans', sans-serif;
+  --r: 6px;
+  --r-lg: 10px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── LAYOUT ── */
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 1.5rem 1.25rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.sidebar-wordmark {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  display: block;
+}
+.sidebar-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.sidebar-nav { padding: 1rem 0; flex: 1; }
+.nav-section-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  padding: 0.75rem 1.25rem 0.4rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 1.25rem;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all .12s;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--bg); color: var(--ink); }
+.nav-item.active { background: var(--bg); color: var(--ink); border-left-color: var(--ink); font-weight: 500; }
+.nav-item svg { width: 15px; height: 15px; opacity: 0.6; flex-shrink: 0; }
+.nav-item.active svg { opacity: 1; }
+.nav-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--ink);
+  color: var(--white);
+  padding: 1px 6px;
+  border-radius: 20px;
+}
+.nav-badge.green { background: var(--green); }
+
+.sidebar-status {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+.status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
+.status-text { font-family: var(--font-mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.05em; }
+.status-fans { font-family: var(--font-mono); font-size: 11px; color: var(--ink); font-weight: 400; }
+
+/* ── MAIN ── */
+.main { display: flex; flex-direction: column; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title { font-family: var(--font-serif); font-size: 18px; color: var(--ink); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.btn {
+  padding: 7px 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--r);
+  border: 1px solid var(--rule);
+  background: var(--white);
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all .12s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { border-color: var(--ink3); color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.btn.primary:hover { background: #2d2c28; }
+.btn svg { width: 13px; height: 13px; }
+
+/* ── CONTENT AREA ── */
+.content { padding: 2rem; flex: 1; }
+
+/* ── STATS ROW ── */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.25rem;
+}
+.stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; }
+.stat-num { font-family: var(--font-serif); font-size: 28px; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+.stat-delta { font-size: 11px; color: var(--green); font-family: var(--font-mono); }
+.stat-delta.down { color: var(--red); }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+
+/* ── UPLOAD CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.card-header {
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title { font-family: var(--font-serif); font-size: 16px; color: var(--ink); }
+.card-sub { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+.card-body { padding: 1.5rem; }
+
+/* ── DROP ZONE ── */
+.drop-zone {
+  border: 1.5px dashed var(--rule);
+  border-radius: var(--r-lg);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg);
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--ink3);
+  background: var(--surface);
+}
+.drop-zone.has-file { border-style: solid; border-color: var(--green); background: var(--green-bg); }
+.drop-icon { font-size: 28px; color: var(--ink3); margin-bottom: 10px; }
+.drop-icon svg { width: 28px; height: 28px; }
+.drop-title { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.drop-hint { font-size: 11px; color: var(--ink3); }
+.drop-types { display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.drop-type-pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  color: var(--ink3);
+  text-transform: uppercase;
+}
+.file-preview {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--green-bg);
+  border-radius: var(--r);
+  margin-bottom: 1.25rem;
+  border: 1px solid #c2ddd0;
+}
+.file-preview.visible { display: flex; }
+.file-preview-icon { width: 36px; height: 36px; border-radius: var(--r); background: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.file-preview-icon svg { width: 18px; height: 18px; color: var(--green); }
+.file-preview-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.file-preview-meta { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+.file-preview-remove { margin-left: auto; font-size: 11px; color: var(--ink3); cursor: pointer; padding: 2px 6px; }
+.file-preview-remove:hover { color: var(--red); }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom: 1.1rem; }
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 6px;
+  display: block;
+}
+.field-input, .field-textarea, .field-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--white);
+  transition: border-color .12s;
+  outline: none;
+  -webkit-appearance: none;
+}
+.field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--ink3); }
+.field-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.field-hint { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+
+/* ── COHORT PICKER ── */
+.cohort-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cohort-btn {
+  padding: 10px 6px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--white);
+  cursor: pointer;
+  text-align: center;
+  transition: all .12s;
+  font-family: var(--font-sans);
+}
+.cohort-btn:hover { border-color: var(--ink3); }
+.cohort-btn.selected { border-width: 2px; }
+.cohort-btn[data-cohort="all"].selected { border-color: var(--all); background: #f0ede8; }
+.cohort-btn[data-cohort="sport"].selected { border-color: var(--sport); background: #eef3f8; }
+.cohort-btn[data-cohort="art"].selected { border-color: var(--art); background: #f5eef8; }
+.cohort-btn[data-cohort="fashion"].selected { border-color: var(--fashion); background: #f8f4ec; }
+.cohort-btn[data-cohort="gaming"].selected { border-color: var(--gaming); background: #eef7f3; }
+.cohort-btn[data-cohort="music"].selected { border-color: var(--music); background: #f8eeee; }
+.cohort-icon { font-size: 16px; margin-bottom: 4px; }
+.cohort-icon svg { width: 16px; height: 16px; }
+.cohort-name { font-size: 11px; font-weight: 500; color: var(--ink); }
+.cohort-count { font-family: var(--font-mono); font-size: 9px; color: var(--ink3); margin-top: 1px; }
+
+/* ── WINDOW TOGGLE ── */
+.window-row { display: flex; gap: 6px; }
+.window-opt {
+  flex: 1;
+  padding: 8px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--r);
+  text-align: center;
+  cursor: pointer;
+  transition: all .12s;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink2);
+  background: var(--white);
+}
+.window-opt:hover { border-color: var(--ink3); color: var(--ink); }
+.window-opt.selected { border-color: var(--ink); background: var(--ink); color: var(--white); }
+.window-val { font-weight: 500; display: block; font-size: 13px; color: inherit; }
+.window-label { font-size: 10px; color: inherit; opacity: 0.7; }
+
+/* ── SUBMIT BAR ── */
+.submit-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  margin-top: 1.25rem;
+}
+.submit-btn {
+  flex: 1;
+  padding: 10px;
+  background: var(--ink);
+  color: var(--white);
+  border: none;
+  border-radius: var(--r);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.submit-btn:hover { background: #2d2c28; }
+.submit-btn:disabled { background: var(--rule); color: var(--ink3); cursor: not-allowed; }
+.submit-btn svg { width: 14px; height: 14px; }
+.preview-btn {
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--white);
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all .12s;
+}
+.preview-btn:hover { border-color: var(--ink3); color: var(--ink); }
+
+/* ── SIDEBAR PANEL (right) ── */
+.side-panel { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ── FEED CARD ── */
+.feed-item {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background .1s;
+}
+.feed-item:hover { background: var(--bg); }
+.feed-item:last-child { border-bottom: none; }
+.feed-avatar {
+  width: 32px; height: 32px;
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.feed-body { flex: 1; min-width: 0; }
+.feed-title { font-size: 13px; color: var(--ink); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.feed-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; }
+.feed-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.feed-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.feed-time { font-family: var(--font-mono); font-size: 10px; color: var(--ink3); }
+.feed-shares { font-size: 11px; color: var(--ink3); display: flex; align-items: center; gap: 3px; }
+.feed-shares svg { width: 11px; height: 11px; }
+
+/* ── COHORT HEALTH ── */
+.health-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.health-row:last-child { border-bottom: none; }
+.health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.health-name { font-size: 12px; color: var(--ink); width: 70px; flex-shrink: 0; }
+.health-bar-wrap { flex: 1; height: 3px; background: var(--rule); border-radius: 2px; }
+.health-bar { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.health-fans { font-family: var(--font-mono); font-size: 10px; color: var(--ink3); width: 36px; text-align: right; flex-shrink: 0; }
+.health-trend { font-family: var(--font-mono); font-size: 10px; color: var(--green); width: 28px; text-align: right; flex-shrink: 0; }
+
+/* ── SUCCESS TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--ink);
+  color: var(--white);
+  padding: 12px 20px;
+  border-radius: var(--r-lg);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all .3s ease;
+  z-index: 200;
+  pointer-events: none;
+  max-width: 320px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast svg { width: 16px; height: 16px; flex-shrink: 0; color: #5cd899; }
+.toast-body { flex: 1; }
+.toast-title { font-weight: 500; margin-bottom: 1px; }
+.toast-sub { font-size: 11px; opacity: 0.7; font-family: var(--font-mono); }
+
+/* ── ANIMATIONS ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes shimmer { 0%{opacity:0;transform:translateY(8px)} 100%{opacity:1;transform:translateY(0)} }
+.shimmer { animation: shimmer 0.4s ease forwards; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .two-col { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-wordmark">ELKAN</span>
+      <span class="sidebar-sub">Content dashboard</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a class="nav-item active" onclick="showPanel('upload')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Post content
+      </a>
+      <a class="nav-item" onclick="showPanel('scheduled')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Scheduled
+        <span class="nav-badge">2</span>
+      </a>
+      <a class="nav-item" onclick="showPanel('live')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Live in world
+        <span class="nav-badge green">24</span>
+      </a>
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" onclick="showPanel('cohorts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Cohorts
+      </a>
+      <a class="nav-item" onclick="showPanel('drops')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Drop performance
+      </a>
+      <a class="nav-item" onclick="showPanel('world')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        World settings
+      </a>
+      <div class="nav-section-label">Connections</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01"/></svg>
+        Instagram
+        <span style="margin-left:auto;font-size:10px;color:var(--green);font-family:var(--font-mono);">live</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+        TikTok
+        <span style="margin-left:auto;font-size:10px;color:var(--green);font-family:var(--font-mono);">live</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        WhatsApp
+        <span style="margin-left:auto;font-size:10px;color:var(--green);font-family:var(--font-mono);">live</span>
+      </a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="status-row">
+        <div class="status-dot"></div>
+        <span class="status-text">World is live</span>
+      </div>
+      <div class="status-fans">284 fans across 5 worlds</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Post content</span>
+      <div class="topbar-right">
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink3)" id="topbar-date"></span>
+        <button class="btn" onclick="viewWorld()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+          View world
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Total fans</div>
+          <div class="stat-num">284</div>
+          <div class="stat-delta">+12 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Drops this week</div>
+          <div class="stat-num">3</div>
+          <div class="stat-delta">On track</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Shares from world</div>
+          <div class="stat-num">47</div>
+          <div class="stat-delta">+31% vs last week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Next unlock</div>
+          <div class="stat-num">16</div>
+          <div class="stat-delta" style="color:var(--amber)">fans to print room</div>
+        </div>
+      </div>
+
+      <!-- UPLOAD PANEL -->
+      <div id="panel-upload" class="two-col">
+
+        <!-- LEFT: UPLOAD FORM -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">New drop</div>
+              <div class="card-sub">Upload once — distributed automatically</div>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Drop zone -->
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDrag(event,true)" ondragleave="handleDrag(event,false)" ondrop="handleDrop(event)">
+              <div class="drop-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              </div>
+              <div class="drop-title">Drop a file or tap to browse</div>
+              <div class="drop-hint">Anything ELKAN would naturally make</div>
+              <div class="drop-types">
+                <div class="drop-type-pill">Voice memo</div>
+                <div class="drop-type-pill">Video clip</div>
+                <div class="drop-type-pill">Photo</div>
+                <div class="drop-type-pill">Image</div>
+              </div>
+            </div>
+            <input type="file" id="file-input" style="display:none" accept="audio/*,video/*,image/*" onchange="handleFileSelect(this)">
+
+            <!-- File preview -->
+            <div class="file-preview" id="file-preview">
+              <div class="file-preview-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div>
+                <div class="file-preview-name" id="file-name">voice-memo-04-05.m4a</div>
+                <div class="file-preview-meta" id="file-meta">2.4 MB · Voice memo</div>
+              </div>
+              <div class="file-preview-remove" onclick="removeFile()">Remove</div>
+            </div>
+
+            <!-- Caption -->
+            <div class="field">
+              <label class="field-label" for="caption">Caption (ELKAN's voice)</label>
+              <textarea class="field-textarea" id="caption" placeholder="Keep it sounding like a text message, not a press release..."></textarea>
+              <div class="field-hint">This becomes the room entry text. Shorter and rawer is better.</div>
+            </div>
+
+            <!-- Cohort picker -->
+            <div class="field">
+              <label class="field-label">Who is this for?</label>
+              <div class="cohort-grid">
+                <div class="cohort-btn selected" data-cohort="all" onclick="selectCohort(this)">
+                  <div class="cohort-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+                  </div>
+                  <div class="cohort-name">Everyone</div>
+                  <div class="cohort-count">284 fans</div>
+                </div>
+                <div class="cohort-btn" data-cohort="sport" onclick="selectCohort(this)">
+                  <div class="cohort-icon">⚡</div>
+                  <div class="cohort-name">Sport</div>
+                  <div class="cohort-count">68 fans</div>
+                </div>
+                <div class="cohort-btn" data-cohort="art" onclick="selectCohort(this)">
+                  <div class="cohort-icon">◎</div>
+                  <div class="cohort-name">Art</div>
+                  <div class="cohort-count">52 fans</div>
+                </div>
+                <div class="cohort-btn" data-cohort="fashion" onclick="selectCohort(this)">
+                  <div class="cohort-icon">◈</div>
+                  <div class="cohort-name">Fashion</div>
+                  <div class="cohort-count">41 fans</div>
+                </div>
+                <div class="cohort-btn" data-cohort="gaming" onclick="selectCohort(this)">
+                  <div class="cohort-icon">▣</div>
+                  <div class="cohort-name">Gaming</div>
+                  <div class="cohort-count">73 fans</div>
+                </div>
+                <div class="cohort-btn" data-cohort="music" onclick="selectCohort(this)">
+                  <div class="cohort-icon">♦</div>
+                  <div class="cohort-name">Music</div>
+                  <div class="cohort-count">50 fans</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exclusive window -->
+            <div class="field">
+              <label class="field-label">Exclusive window</label>
+              <div class="window-row">
+                <div class="window-opt" data-hrs="24" onclick="selectWindow(this)">
+                  <span class="window-val">24h</span>
+                  <span class="window-label">standard</span>
+                </div>
+                <div class="window-opt selected" data-hrs="48" onclick="selectWindow(this)">
+                  <span class="window-val">48h</span>
+                  <span class="window-label">recommended</span>
+                </div>
+                <div class="window-opt" data-hrs="72" onclick="selectWindow(this)">
+                  <span class="window-val">72h</span>
+                  <span class="window-label">big drop</span>
+                </div>
+                <div class="window-opt" data-hrs="0" onclick="selectWindow(this)">
+                  <span class="window-val">No limit</span>
+                  <span class="window-label">vault only</span>
+                </div>
+              </div>
+              <div class="field-hint" id="window-hint">Fans get 48 hours before this becomes public on socials.</div>
+            </div>
+
+            <!-- Type select -->
+            <div class="field">
+              <label class="field-label" for="content-type">Content type</label>
+              <select class="field-select" id="content-type">
+                <option value="auto">Auto-detect from file</option>
+                <option value="voice">Voice note</option>
+                <option value="video">Video clip</option>
+                <option value="photo">Photo / image set</option>
+                <option value="text">Text only</option>
+                <option value="stems">Stems / audio file</option>
+              </select>
+            </div>
+
+            <!-- Submit -->
+            <div class="submit-bar">
+              <button class="preview-btn" onclick="previewDrop()">Preview</button>
+              <button class="submit-btn" id="submit-btn" onclick="submitDrop()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+                Post to world
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: SIDEBAR PANELS -->
+        <div class="side-panel">
+
+          <!-- Recent drops -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Recent drops</div>
+                <div class="card-sub">Last 7 days</div>
+              </div>
+            </div>
+            <div id="feed-list">
+              <div class="feed-item">
+                <div class="feed-avatar" style="background:#eef3f8;color:var(--sport);">⚡</div>
+                <div class="feed-body">
+                  <div class="feed-title">Cover concept — voice note #3</div>
+                  <div class="feed-meta">
+                    <span class="feed-badge" style="background:#edf5f0;color:var(--green);">All</span>
+                    Voice
+                  </div>
+                </div>
+                <div class="feed-right">
+                  <div class="feed-time">2h ago</div>
+                  <div class="feed-shares">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                    23 shares
+                  </div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="feed-avatar" style="background:#f5eef8;color:var(--art);">◎</div>
+                <div class="feed-body">
+                  <div class="feed-title">Freetown reference board</div>
+                  <div class="feed-meta">
+                    <span class="feed-badge" style="background:#f5eef8;color:var(--art);">Art</span>
+                    Photos
+                  </div>
+                </div>
+                <div class="feed-right">
+                  <div class="feed-time">3 days</div>
+                  <div class="feed-shares">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                    14 shares
+                  </div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="feed-avatar" style="background:#eef7f3;color:var(--gaming);">▣</div>
+                <div class="feed-body">
+                  <div class="feed-title">Lobby track #7</div>
+                  <div class="feed-meta">
+                    <span class="feed-badge" style="background:#eef7f3;color:var(--gaming);">Gaming</span>
+                    Audio
+                  </div>
+                </div>
+                <div class="feed-right">
+                  <div class="feed-time">5 days</div>
+                  <div class="feed-shares">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                    10 shares
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cohort health -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Cohort activity</div>
+                <div class="card-sub">Engagement this week</div>
+              </div>
+            </div>
+            <div class="card-body" style="padding: 1rem 1.5rem;">
+              <div class="health-row">
+                <div class="health-dot" style="background:var(--gaming)"></div>
+                <div class="health-name">Gaming</div>
+                <div class="health-bar-wrap"><div class="health-bar" style="width:0%;background:var(--gaming)" data-w="87"></div></div>
+                <div class="health-fans">73</div>
+                <div class="health-trend">+9</div>
+              </div>
+              <div class="health-row">
+                <div class="health-dot" style="background:var(--sport)"></div>
+                <div class="health-name">Sport</div>
+                <div class="health-bar-wrap"><div class="health-bar" style="width:0%;background:var(--sport)" data-w="71"></div></div>
+                <div class="health-fans">68</div>
+                <div class="health-trend">+4</div>
+              </div>
+              <div class="health-row">
+                <div class="health-dot" style="background:var(--music)"></div>
+                <div class="health-name">Music</div>
+                <div class="health-bar-wrap"><div class="health-bar" style="width:0%;background:var(--music)" data-w="60"></div></div>
+                <div class="health-fans">50</div>
+                <div class="health-trend">+6</div>
+              </div>
+              <div class="health-row">
+                <div class="health-dot" style="background:var(--art)"></div>
+                <div class="health-name">Art</div>
+                <div class="health-bar-wrap"><div class="health-bar" style="width:0%;background:var(--art)" data-w="52"></div></div>
+                <div class="health-fans">52</div>
+                <div class="health-trend">+3</div>
+              </div>
+              <div class="health-row">
+                <div class="health-dot" style="background:var(--fashion)"></div>
+                <div class="health-name">Fashion</div>
+                <div class="health-bar-wrap"><div class="health-bar" style="width:0%;background:var(--fashion)" data-w="40"></div></div>
+                <div class="health-fans">41</div>
+                <div class="health-trend">+2</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unlock progress -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Unlock progress</div>
+            </div>
+            <div class="card-body" style="padding:1rem 1.5rem;">
+              <div style="margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:12px;color:var(--ink);">Art print room</span>
+                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink3);">184 / 200</span>
+                </div>
+                <div style="height:4px;background:var(--rule);border-radius:2px;">
+                  <div style="height:100%;width:0%;background:var(--art);border-radius:2px;transition:width 1.2s ease" data-w="92"></div>
+                </div>
+                <div style="font-size:11px;color:var(--amber);margin-top:4px;font-family:var(--font-mono);">16 fans away</div>
+              </div>
+              <div style="margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:12px;color:var(--ink);">Gaming tournament</span>
+                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink3);">73 / 250</span>
+                </div>
+                <div style="height:4px;background:var(--rule);border-radius:2px;">
+                  <div style="height:100%;width:0%;background:var(--gaming);border-radius:2px;transition:width 1.2s ease" data-w="29"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:12px;color:var(--ink);">Sport vault</span>
+                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink3);">68 / 500</span>
+                </div>
+                <div style="height:4px;background:var(--rule);border-radius:2px;">
+                  <div style="height:100%;width:0%;background:var(--sport);border-radius:2px;transition:width 1.2s ease" data-w="14"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- OTHER PANELS (placeholder) -->
+      <div id="panel-scheduled" style="display:none">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">Scheduled drops</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--ink3);padding:2rem;text-align:center;">2 drops queued for this week.</div>
+          </div>
+        </div>
+      </div>
+      <div id="panel-live" style="display:none">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">Live in world now</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--ink3);padding:2rem;text-align:center;">24 fans currently active across 5 worlds.</div>
+          </div>
+        </div>
+      </div>
+      <div id="panel-cohorts" style="display:none">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">Cohort breakdown</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--ink3);padding:2rem;text-align:center;">Full cohort analytics view.</div>
+          </div>
+        </div>
+      </div>
+      <div id="panel-drops" style="display:none">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">Drop performance</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--ink3);padding:2rem;text-align:center;">Detailed analytics per drop — shares, views, cohort breakdown.</div>
+          </div>
+        </div>
+      </div>
+      <div id="panel-world" style="display:none">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">World settings</div></div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--ink3);padding:2rem;text-align:center;">Manage rooms, unlock thresholds, and world copy.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <div class="toast-body">
+    <div class="toast-title" id="toast-title">Posted to world</div>
+    <div class="toast-sub" id="toast-sub">WhatsApp pings sending now</div>
+  </div>
+</div>
+
+<script>
+var selectedCohort = 'all';
+var selectedWindow = 48;
+var hasFile = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('topbar-date').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
+  setTimeout(function() {
+    document.querySelectorAll('.health-bar[data-w], .card-body [data-w]').forEach(function(el) {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 300);
+});
+
+function showPanel(name) {
+  ['upload','scheduled','live','cohorts','drops','world'].forEach(function(p) {
+    var el = document.getElementById('panel-' + p);
+    if (el) el.style.display = p === name ? (p === 'upload' ? 'grid' : 'block') : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  event.currentTarget.classList.add('active');
+  var titles = { upload:'Post content', scheduled:'Scheduled', live:'Live in world', cohorts:'Cohorts', drops:'Drop performance', world:'World settings' };
+  document.getElementById('topbar-title').textContent = titles[name] || 'Dashboard';
+}
+
+function selectCohort(btn) {
+  document.querySelectorAll('.cohort-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  selectedCohort = btn.dataset.cohort;
+}
+
+function selectWindow(opt) {
+  document.querySelectorAll('.window-opt').forEach(function(o) { o.classList.remove('selected'); });
+  opt.classList.add('selected');
+  selectedWindow = parseInt(opt.dataset.hrs, 10);
+  var hints = { 0:'This content stays exclusive to the world. No public release.', 24:'Fans get 24 hours before this is released publicly.', 48:'Fans get 48 hours before this becomes public on socials.', 72:'72 hours — use this for major drops before a release.' };
+  document.getElementById('window-hint').textContent = hints[selectedWindow] || '';
+}
+
+function handleDrag(e, over) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.toggle('drag-over', over);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+}
+
+function handleFileSelect(input) {
+  if (input.files.length) loadFile(input.files[0]);
+}
+
+function loadFile(file) {
+  hasFile = true;
+  var ext = file.name.split('.').pop().toLowerCase();
+  var typeMap = { m4a:'Voice memo', mp3:'Audio', wav:'Audio', mp4:'Video', mov:'Video', jpg:'Photo', jpeg:'Photo', png:'Photo', heic:'Photo' };
+  var kb = Math.round(file.size / 1024);
+  var size = kb > 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB';
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-meta').textContent = size + ' · ' + (typeMap[ext] || 'File');
+  document.getElementById('file-preview').classList.add('visible');
+  document.getElementById('drop-zone').classList.add('has-file');
+}
+
+function removeFile() {
+  hasFile = false;
+  document.getElementById('file-preview').classList.remove('visible');
+  document.getElementById('drop-zone').classList.remove('has-file');
+  document.getElementById('file-input').value = '';
+}
+
+function previewDrop() {
+  showToast('Preview opened', 'Opening in a new tab');
+}
+
+function submitDrop() {
+  var caption = document.getElementById('caption').value.trim();
+  if (!caption) {
+    document.getElementById('caption').focus();
+    document.getElementById('caption').style.borderColor = '#c0392b';
+    setTimeout(function() { document.getElementById('caption').style.borderColor = ''; }, 2000);
+    return;
+  }
+  var cohortNames = { all:'all 5 worlds', sport:'sport world', art:'art world', fashion:'fashion world', gaming:'gaming world', music:'music world' };
+  var sub = 'Posting to ' + cohortNames[selectedCohort] + ' — WhatsApp pings sending';
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;animation:spin .8s linear infinite"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.3"/><path d="M12 3a9 9 0 019 9"/></svg> Posting...';
+
+  setTimeout(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Post to world';
+    document.getElementById('caption').value = '';
+    removeFile();
+    showToast('Posted to world', sub);
+    addFeedItem(caption, selectedCohort);
+  }, 1400);
+}
+
+function addFeedItem(caption, cohort) {
+  var icons = { all:'◉', sport:'⚡', art:'◎', fashion:'◈', gaming:'▣', music:'♦' };
+  var colors = { all:'var(--all)', sport:'var(--sport)', art:'var(--art)', fashion:'var(--fashion)', gaming:'var(--gaming)', music:'var(--music)' };
+  var bgs = { all:'#f0ede8', sport:'#eef3f8', art:'#f5eef8', fashion:'#f8f4ec', gaming:'#eef7f3', music:'#f8eeee' };
+  var labels = { all:'All', sport:'Sport', art:'Art', fashion:'Fashion', gaming:'Gaming', music:'Music' };
+  var item = document.createElement('div');
+  item.className = 'feed-item shimmer';
+  item.innerHTML =
+    '<div class="feed-avatar" style="background:' + bgs[cohort] + ';color:' + colors[cohort] + ';">' + icons[cohort] + '</div>' +
+    '<div class="feed-body">' +
+      '<div class="feed-title">' + caption.substring(0, 42) + (caption.length > 42 ? '...' : '') + '</div>' +
+      '<div class="feed-meta"><span class="feed-badge" style="background:' + bgs[cohort] + ';color:' + colors[cohort] + ';">' + labels[cohort] + '</span> Just posted</div>' +
+    '</div>' +
+    '<div class="feed-right"><div class="feed-time">now</div></div>';
+  var list = document.getElementById('feed-list');
+  list.insertBefore(item, list.firstChild);
+}
+
+function showToast(title, sub) {
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-sub').textContent = sub;
+  var t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
+function viewWorld() {
+  showToast('Opening world', 'Live preview in new tab');
+}
+
+document.head.insertAdjacentHTML('beforeend', '<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>');
+</script>
+</body>
+</html>
