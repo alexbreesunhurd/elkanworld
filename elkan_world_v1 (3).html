@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELKAN — Your World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #f0ede6;
+    --cream: #e8e4da;
+    --dim: #1a1a1a;
+    --mid: #2a2a2a;
+    --muted: #888;
+    --accent: #c8b89a;
+    --hot: #e85d24;
+    --sport: #1a6bb5;
+    --art: #7c4d8a;
+    --fashion: #b5955a;
+    --gaming: #1a9e6b;
+    --music: #c8392b;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.35;
+  }
+
+  /* ── ONBOARDING SCREEN ── */
+  #onboarding {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #onboarding.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .ob-logo {
+    font-family: var(--font-display);
+    font-size: clamp(64px, 15vw, 140px);
+    letter-spacing: 0.05em;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .ob-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.5s forwards;
+  }
+  .ob-question {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+  .ob-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 700px;
+    width: 100%;
+    opacity: 0;
+    animation: fadeUp 0.8s 1s forwards;
+  }
+  @media (max-width: 600px) { .ob-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .ob-btn {
+    padding: 14px 8px;
+    border: 0.5px solid #333;
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .ob-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ob-btn.selected { border-color: var(--white); color: var(--white); background: #1a1a1a; }
+  .ob-btn .ob-icon { font-size: 20px; display: block; margin-bottom: 6px; }
+
+  .ob-enter {
+    margin-top: 2rem;
+    padding: 14px 48px;
+    background: var(--white);
+    color: var(--black);
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+    animation: fadeUp 0.8s 1.2s forwards;
+    display: none;
+  }
+  .ob-enter.visible { display: block; }
+  .ob-enter:hover { background: var(--accent); }
+
+  /* ── MAIN WORLD ── */
+  #world {
+    opacity: 0;
+    transition: opacity 1s ease;
+    min-height: 100vh;
+  }
+  #world.visible { opacity: 1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 0.5px solid #1e1e1e;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.1em;
+    color: var(--white);
+  }
+  .nav-cohort {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cohort-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cohort-color, var(--accent));
+    display: inline-block;
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .nav-wa {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: #25D366;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .wa-dot { width: 5px; height: 5px; border-radius: 50%; background: #25D366; animation: pulse 2s infinite; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 2rem 4rem;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, var(--cohort-bg, #1a1205) 0%, var(--black) 65%);
+    transition: background 1s ease;
+  }
+
+  .hero-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(80px, 18vw, 200px);
+    line-height: 0.9;
+    text-align: center;
+    letter-spacing: 0.02em;
+    position: relative;
+    background: linear-gradient(180deg, var(--white) 40%, rgba(240,237,230,0.3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-divider {
+    width: 0.5px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    margin: 2.5rem auto;
+    position: relative;
+  }
+
+  .hero-drop {
+    position: relative;
+    text-align: center;
+    max-width: 420px;
+  }
+  .hero-drop-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--hot);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .hero-drop-text {
+    font-size: 14px;
+    color: var(--accent);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .hero-timer {
+    margin-top: 2rem;
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 0.15em;
+    color: var(--hot);
+  }
+  .hero-timer-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+    text-align: center;
+  }
+
+  /* ── SCROLL INDICATOR ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .scroll-line {
+    width: 0.5px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--muted), transparent);
+  }
+
+  /* ── SECTION ── */
+  section {
+    padding: 5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: #1e1e1e;
+  }
+
+  /* ── ROOM GRID ── */
+  .rooms {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #1a1a1a;
+    border: 1px solid #1a1a1a;
+  }
+  @media (max-width: 768px) { .rooms { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .rooms { grid-template-columns: 1fr; } }
+
+  .room {
+    background: var(--black);
+    padding: 1.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .room:hover { background: var(--dim); }
+  .room.locked { opacity: 0.38; cursor: not-allowed; }
+  .room.locked:hover { background: var(--black); }
+  .room.featured {
+    grid-column: span 2;
+    background: var(--dim);
+  }
+  @media (max-width: 480px) { .room.featured { grid-column: span 1; } }
+
+  .room-number {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: #444;
+    margin-bottom: 1.25rem;
+  }
+  .room-name {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+  }
+  .room.featured .room-name { font-size: 36px; }
+  .room-desc {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .room-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .room-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    padding: 3px 8px;
+    border: 0.5px solid #2a2a2a;
+    color: #555;
+    text-transform: uppercase;
+  }
+  .room-new {
+    position: absolute;
+    top: 1.75rem; right: 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    padding: 2px 8px;
+    background: var(--hot);
+    color: var(--white);
+    text-transform: uppercase;
+  }
+  .room-lock {
+    position: absolute;
+    bottom: 1.75rem; right: 1.75rem;
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* ── LATEST DROP ── */
+  .drop-strip {
+    border: 0.5px solid #1e1e1e;
+    padding: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    margin-bottom: 1px;
+  }
+  .drop-strip:hover { border-color: #333; }
+  .drop-num {
+    font-family: var(--font-display);
+    font-size: 48px;
+    color: #1e1e1e;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 48px;
+  }
+  .drop-content { flex: 1; }
+  .drop-type {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .drop-title {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--white);
+    margin-bottom: 0.35rem;
+  }
+  .drop-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .drop-exclusive {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--hot);
+    text-transform: uppercase;
+    text-align: right;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .album-progress {
+    border: 0.5px solid #1e1e1e;
+    padding: 2rem;
+    margin-top: 4rem;
+  }
+  .progress-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+  }
+  .progress-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.06em;
+  }
+  .progress-note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .progress-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    width: 140px;
+    flex-shrink: 0;
+  }
+  .progress-track {
+    flex: 1;
+    height: 1px;
+    background: #1e1e1e;
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--cohort-color, var(--accent));
+    transition: width 1.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-pct {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 0.5px solid #1a1a1a;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.1em; color: #2a2a2a; }
+  .footer-note { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; color: #2a2a2a; text-transform: uppercase; }
+
+  /* ── MODAL ── */
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    backdrop-filter: blur(4px);
+  }
+  #modal-overlay.open { opacity: 1; visibility: visible; }
+
+  .modal {
+    background: var(--dim);
+    border: 0.5px solid #2a2a2a;
+    max-width: 560px;
+    width: 100%;
+    padding: 2.5rem;
+    position: relative;
+  }
+  .modal-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+  .modal-body {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+  .modal-exclusive {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--hot);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .modal-exclusive::before { content: '●'; font-size: 6px; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-btn {
+    padding: 10px 24px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 0.5px solid #333;
+    background: transparent;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .modal-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
+  .modal-btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+  .modal-close {
+    position: absolute;
+    top: 1.5rem; right: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #444;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--white); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.8; transform: translateX(-50%) translateY(-6px); }
+  }
+  @keyframes countdown {
+    0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; }
+  }
+  .hero-timer { animation: countdown 2s ease-in-out infinite; }
+
+  /* Stagger reveal on world load */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-logo">ELKAN</div>
+  <div class="ob-sub">For people who actually get it</div>
+  <div class="ob-question">— What's your world? —</div>
+  <div class="ob-grid">
+    <button class="ob-btn" data-cohort="sport" data-color="#1a6bb5" data-bg="#050e1a" onclick="selectCohort(this)">
+      <span class="ob-icon">⚡</span>Sport
+    </button>
+    <button class="ob-btn" data-cohort="art" data-color="#7c4d8a" data-bg="#0d080f" onclick="selectCohort(this)">
+      <span class="ob-icon">◎</span>Art
+    </button>
+    <button class="ob-btn" data-cohort="fashion" data-color="#b5955a" data-bg="#120f07" onclick="selectCohort(this)">
+      <span class="ob-icon">◈</span>Fashion
+    </button>
+    <button class="ob-btn" data-cohort="gaming" data-color="#1a9e6b" data-bg="#051209" onclick="selectCohort(this)">
+      <span class="ob-icon">▣</span>Gaming
+    </button>
+    <button class="ob-btn" data-cohort="music" data-color="#c8392b" data-bg="#120505" onclick="selectCohort(this)">
+      <span class="ob-icon">♦</span>Music
+    </button>
+  </div>
+  <button class="ob-enter" id="enter-btn" onclick="enterWorld()">Enter</button>
+</div>
+
+<!-- MAIN WORLD -->
+<div id="world">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">ELKAN</div>
+    <div class="nav-cohort">
+      <span class="cohort-dot" id="nav-dot"></span>
+      <span id="nav-cohort-name"></span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-wa">
+        <span class="wa-dot"></span>
+        @elkanexe
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-date" id="hero-date"></div>
+    <div class="hero-title">ELKAN</div>
+    <div class="hero-divider"></div>
+    <div class="hero-drop">
+      <div class="hero-drop-label" id="drop-label"></div>
+      <div class="hero-drop-text" id="drop-text"></div>
+      <div class="hero-timer" id="hero-timer">46:22:09</div>
+      <div class="hero-timer-label">Until public release</div>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+
+  <!-- ROOMS -->
+  <section>
+    <div class="section-label">Your rooms</div>
+    <div class="rooms" id="rooms-grid"></div>
+  </section>
+
+  <!-- LATEST DROPS -->
+  <section style="padding-top: 0;">
+    <div class="section-label">Latest drops</div>
+    <div id="drops-list"></div>
+
+    <div class="album-progress">
+      <div class="progress-header">
+        <div class="progress-title">Album in progress</div>
+        <div class="progress-note">You're watching it happen</div>
+      </div>
+      <div id="progress-items"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">ELKAN</div>
+    <div class="footer-note">This is yours. Keep it that way.</div>
+  </footer>
+
+</div>
+
+<!-- ROOM VIEW (full screen, replaces world) -->
+<div id="room-view">
+  <div class="room-view-nav">
+    <button class="room-back-btn" id="room-back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to world
+    </button>
+    <div class="room-view-label" id="room-view-label"></div>
+  </div>
+  <div class="room-view-body">
+    <div class="room-view-eyebrow" id="room-view-eyebrow"></div>
+    <div class="room-view-title" id="room-view-title"></div>
+    <div class="room-view-exclusive" id="room-view-exclusive"></div>
+    <div class="room-view-content" id="room-view-content"></div>
+    <div class="room-view-actions">
+      <button class="room-view-btn primary">Listen / watch</button>
+      <button class="room-view-btn" id="room-share-btn">Share this ↗</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #room-view {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    overflow-y: auto;
+  }
+  #room-view.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  .room-view-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 0.5px solid #1e1e1e;
+    position: sticky;
+    top: 0;
+    background: var(--black);
+    z-index: 10;
+  }
+  .room-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 0.5px solid #2a2a2a;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+  .room-back-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .room-back-btn svg { flex-shrink: 0; }
+  .room-view-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .room-view-body {
+    flex: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+    width: 100%;
+  }
+  .room-view-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .room-view-title {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 8vw, 72px);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    color: var(--white);
+    margin-bottom: 2rem;
+  }
+  .room-view-exclusive {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--hot);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  .room-view-exclusive.visible { display: flex; }
+  .room-view-exclusive::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--hot);
+    animation: pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .room-view-content {
+    font-size: 16px;
+    color: #aaa;
+    line-height: 1.9;
+    font-weight: 300;
+    border-left: 0.5px solid #2a2a2a;
+    padding-left: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .room-view-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .room-view-btn {
+    padding: 12px 28px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 0.5px solid #333;
+    background: transparent;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+  .room-view-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .room-view-btn.primary { background: var(--white); color: var(--black); border-color: var(--white); }
+  .room-view-btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+</style>
+
+<script>
+var COHORTS = {
+  sport: {
+    label: 'Sport door', color: '#1a6bb5', bg: 'rgba(26,107,181,0.12)',
+    heroText: 'MARATHON was made in a room that smelled like a gym.',
+    dropLabel: 'Arena track — 48hr exclusive',
+    rooms: [
+      { name: 'The marathon room', desc: 'Where MARATHON was made. Training sessions, voice memos at 5am. The raw version.', tags: ['voice', 'exclusive'], isNew: true, featured: true, locked: false, content: 'Three voice memos from the night MARATHON was finished. ELKAN thought it was going to be a completely different song.' },
+      { name: 'Locker room', desc: 'Unreleased beats built for warm-up playlists. High BPM. Not for streaming, for moving.', tags: ['beats', 'unreleased'], isNew: false, featured: false, locked: false, content: 'Four instrumentals. None of them have vocals yet. One of them might become the next single.' },
+      { name: 'The win tape', desc: 'Celebration edits. Share-ready clips made for the moment after you win something.', tags: ['shareable'], isNew: false, featured: false, locked: false, content: 'Seven clips, each under 30 seconds. Made to be sent in the group chat.' },
+      { name: 'Pre-season vault', desc: 'Opens when 500 sport fans are in the world. 284 in so far.', tags: ['locked', '284/500'], isNew: false, featured: false, locked: true, content: '' },
+    ],
+    drops: [
+      { type: 'Voice note', title: 'Cover concept — recorded at 4am', meta: 'Today · 2m 41s', exclusive: '44h left' },
+      { type: 'Beat', title: 'Untitled warmup track #4', meta: '2 days ago · 3m 12s', exclusive: null },
+    ],
+    progress: [{ label: 'Artwork', pct: 60 }, { label: 'Sequencing', pct: 80 }, { label: 'Liner notes', pct: 30 }]
+  },
+  art: {
+    label: 'Art door', color: '#7c4d8a', bg: 'rgba(124,77,138,0.10)',
+    heroText: 'The cover does not exist yet. You are watching it become something.',
+    dropLabel: 'Freetown reference board — 48hr exclusive',
+    rooms: [
+      { name: 'The sketchbook', desc: 'Album artwork in progress. Early versions, rejected concepts and the reasoning behind every cut.', tags: ['artwork', 'exclusive'], isNew: true, featured: true, locked: false, content: 'Voice note #3 from the cover sessions. ELKAN says he hates all three current versions. The third one is closest.' },
+      { name: 'On film', desc: 'Visual diary. Shot on 35mm, nothing curated, nothing staged.', tags: ['photography', 'diary'], isNew: false, featured: false, locked: false, content: '22 photographs from the last three months. All shot on a single roll of Kodak Portra 400.' },
+      { name: 'Collab canvas', desc: 'ELKAN working with visual artists. Process videos, first drafts, dead ends.', tags: ['collab', 'video'], isNew: false, featured: false, locked: false, content: 'A session with a painter from Freetown. Shot over two days. No brief, no direction.' },
+      { name: 'The print room', desc: 'Limited edition prints. Opens when 300 art fans are in the world. 184 in so far.', tags: ['locked', '184/300'], isNew: false, featured: false, locked: true, content: '' },
+    ],
+    drops: [
+      { type: 'Reference board', title: 'Freetown — visual references for the album', meta: 'Today · 11 images', exclusive: '46h left' },
+      { type: 'Photography', title: '35mm diary — January through March', meta: '3 days ago · 22 images', exclusive: null },
+    ],
+    progress: [{ label: 'Artwork', pct: 60 }, { label: 'Visual direction', pct: 45 }, { label: 'Liner notes', pct: 30 }]
+  },
+  fashion: {
+    label: 'Fashion door', color: '#b5955a', bg: 'rgba(181,149,90,0.08)',
+    heroText: 'Every outfit tells you where the music was made.',
+    dropLabel: 'Archive look book — 48hr exclusive',
+    rooms: [
+      { name: 'The archive', desc: 'Every outfit since 2023. Styled looks, rare pieces, what was playing when he wore it.', tags: ['archive', 'exclusive'], isNew: true, featured: true, locked: false, content: 'The full archive: 47 looks, each tagged with the track that was playing. The NOKIA shoot outfit is in here.' },
+      { name: 'Fitting room', desc: 'Behind the scenes of shoot days. What almost made it, what got cut at the last second.', tags: ['bts', 'video'], isNew: false, featured: false, locked: false, content: 'Six minutes from the MARATHON shoot. Three different fits. Only one made the cover.' },
+      { name: 'Mood board', desc: 'What ELKAN is referencing right now. Not aesthetic, actual sources. Updated weekly.', tags: ['reference', 'weekly'], isNew: false, featured: false, locked: false, content: 'This week: 90s Lagos photography, early Helmut Lang, and something from a Sierra Leone wedding last month.' },
+      { name: 'The showroom', desc: 'Merch before it drops publicly. Opens when 400 fashion fans are in the world.', tags: ['locked', '184/400'], isNew: false, featured: false, locked: true, content: '' },
+    ],
+    drops: [
+      { type: 'Look book', title: 'Full archive — 47 looks, 2023 to 2025', meta: 'Today · 47 images', exclusive: '46h left' },
+      { type: 'BTS video', title: 'MARATHON shoot — three fits, one chosen', meta: '2 days ago · 6m', exclusive: null },
+    ],
+    progress: [{ label: 'Artwork', pct: 60 }, { label: 'Merch design', pct: 35 }, { label: 'Collab', pct: 70 }]
+  },
+  gaming: {
+    label: 'Gaming door', color: '#1a9e6b', bg: 'rgba(26,158,107,0.08)',
+    heroText: 'The lobby track was made while losing. Three hours straight.',
+    dropLabel: 'New lobby track — you heard it first',
+    rooms: [
+      { name: 'The lobby', desc: 'Tracks made during late-night sessions. The beats that came out of not being able to sleep.', tags: ['beats', 'exclusive'], isNew: true, featured: true, locked: false, content: 'Lobby track #7. Made during a three-hour session. ELKAN lost every single game that night.' },
+      { name: 'Stems room', desc: 'Download MARATHON stems. Remix them. ELKAN wants to hear what you do with them.', tags: ['stems', 'download'], isNew: false, featured: false, locked: false, content: 'Eight tracks. Full stems. Drums, bass, melody, vocals separated. No restrictions on personal use.' },
+      { name: 'Sound packs', desc: 'ELKAN-branded sound packs for creators. Free. Tag @elkanexe if you use them.', tags: ['free', 'download'], isNew: false, featured: false, locked: false, content: '32 samples. All cleared. Tag @elkanexe.' },
+      { name: 'Tournament room', desc: 'ELKAN vs fan event. Opens when 250 gaming fans are in the world. 73 in so far.', tags: ['locked', '73/250'], isNew: false, featured: false, locked: true, content: '' },
+    ],
+    drops: [
+      { type: 'Beat', title: 'Lobby track #7 — made while losing', meta: 'Today · 3m 44s', exclusive: '44h left' },
+      { type: 'Stems', title: 'MARATHON — full stem pack', meta: '3 days ago · 8 tracks', exclusive: null },
+    ],
+    progress: [{ label: 'Artwork', pct: 60 }, { label: 'Sound packs', pct: 90 }, { label: 'OST project', pct: 20 }]
+  },
+  music: {
+    label: 'Music door', color: '#c8392b', bg: 'rgba(200,57,43,0.08)',
+    heroText: 'You will hear the next single 72 hours before anyone.',
+    dropLabel: 'Next single — 72hr exclusive window',
+    rooms: [
+      { name: 'Studio wall', desc: 'Every session from the last album cycle. The version of MARATHON before it was MARATHON.', tags: ['sessions', 'exclusive'], isNew: true, featured: true, locked: false, content: 'The original MARATHON demo. Different title. Different hook. You will recognise the DNA.' },
+      { name: 'The listening room', desc: 'MARATHON broken into its layers. Hear what is underneath the mix.', tags: ['stems', 'deep'], isNew: false, featured: false, locked: false, content: 'Isolated vocals on every track. There is an ad-lib on track 4 that did not make the final mix. It should have.' },
+      { name: 'B-side vault', desc: 'All 14 cuts that did not make the album. Complete. Not snippets.', tags: ['unreleased'], isNew: false, featured: false, locked: false, content: '14 full tracks. None of them will be officially released. They are yours.' },
+      { name: 'Next project room', desc: 'Opens when this album hits 1M Spotify plays. At 756K right now.', tags: ['locked', '756K/1M'], isNew: false, featured: false, locked: true, content: '' },
+    ],
+    drops: [
+      { type: 'Single snippet', title: 'Next single — 45 seconds. Keep it here for now.', meta: 'Today · 0m 45s', exclusive: '71h left' },
+      { type: 'Demo', title: 'MARATHON — original demo, different title', meta: 'Yesterday · 3m 02s', exclusive: '22h left' },
+    ],
+    progress: [{ label: 'Artwork', pct: 60 }, { label: 'Sequencing', pct: 80 }, { label: 'Next project', pct: 5 }]
+  }
+};
+
+var currentCohort = null;
+
+function selectCohort(btn) {
+  document.querySelectorAll('.ob-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  currentCohort = btn.dataset.cohort;
+  document.getElementById('enter-btn').classList.add('visible');
+}
+
+function enterWorld() {
+  if (!currentCohort) return;
+  document.getElementById('onboarding').classList.add('hidden');
+  setTimeout(function() { buildWorld(currentCohort); }, 400);
+}
+
+function buildWorld(cohort) {
+  var c = COHORTS[cohort];
+  document.documentElement.style.setProperty('--cohort-color', c.color);
+  document.documentElement.style.setProperty('--cohort-bg', c.bg);
+  document.getElementById('nav-dot').style.background = c.color;
+  document.getElementById('nav-cohort-name').textContent = c.label;
+  document.getElementById('hero-bg').style.background =
+    'radial-gradient(ellipse at 50% 60%, ' + c.bg + ' 0%, var(--black) 65%)';
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
+  document.getElementById('drop-label').textContent = c.dropLabel;
+  document.getElementById('drop-text').textContent = c.heroText;
+
+  var grid = document.getElementById('rooms-grid');
+  grid.innerHTML = c.rooms.map(function(r, i) {
+    return '<div class="room reveal ' + (r.featured ? 'featured' : '') + ' ' + (r.locked ? 'locked' : '') + '"' +
+      ' data-cohort="' + cohort + '" data-idx="' + i + '" data-locked="' + r.locked + '">' +
+      (r.isNew ? '<div class="room-new">New</div>' : '') +
+      (r.locked ? '<div class="room-lock">\u2298</div>' : '') +
+      '<div class="room-number">' + String(i+1).padStart(2,'0') + '</div>' +
+      '<div class="room-name">' + r.name + '</div>' +
+      '<div class="room-desc">' + r.desc + '</div>' +
+      '<div class="room-tags">' + r.tags.map(function(t){ return '<div class="room-tag">' + t + '</div>'; }).join('') + '</div>' +
+      '</div>';
+  }).join('');
+
+  grid.onclick = function(e) {
+    var room = e.target.closest('.room');
+    if (!room || room.dataset.locked === 'true') return;
+    openRoomView(room.dataset.cohort, parseInt(room.dataset.idx, 10));
+  };
+
+  var dropsList = document.getElementById('drops-list');
+  dropsList.innerHTML = c.drops.map(function(d, i) {
+    return '<div class="drop-strip reveal">' +
+      '<div class="drop-num">' + String(i+1).padStart(2,'0') + '</div>' +
+      '<div class="drop-content">' +
+        '<div class="drop-type">' + d.type + '</div>' +
+        '<div class="drop-title">' + d.title + '</div>' +
+        '<div class="drop-meta">' + d.meta + '</div>' +
+      '</div>' +
+      (d.exclusive ? '<div class="drop-exclusive">\u25C6 ' + d.exclusive + '</div>' : '') +
+      '</div>';
+  }).join('');
+
+  var progItems = document.getElementById('progress-items');
+  progItems.innerHTML = c.progress.map(function(p) {
+    return '<div class="progress-item reveal">' +
+      '<div class="progress-label">' + p.label + '</div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:0%" data-pct="' + p.pct + '"></div></div>' +
+      '<div class="progress-pct">' + p.pct + '%</div>' +
+      '</div>';
+  }).join('');
+
+  document.getElementById('world').classList.add('visible');
+
+  setTimeout(function() {
+    document.querySelectorAll('.reveal').forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('in'); }, i * 60);
+    });
+    document.querySelectorAll('.progress-fill').forEach(function(el) {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 200);
+
+  startTimer();
+}
+
+var timerStarted = false;
+function startTimer() {
+  if (timerStarted) return;
+  timerStarted = true;
+  var h = 46, m = 22, s = 9;
+  var el = document.getElementById('hero-timer');
+  setInterval(function() {
+    s--;
+    if (s < 0) { s = 59; m--; }
+    if (m < 0) { m = 59; h--; }
+    if (h < 0) { h = 0; m = 0; s = 0; }
+    el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+function openRoomView(cohort, idx) {
+  var room = COHORTS[cohort].rooms[idx];
+  var c = COHORTS[cohort];
+  document.getElementById('room-view-label').textContent = c.label;
+  document.getElementById('room-view-eyebrow').textContent = room.isNew ? 'New — ' + c.label : c.label;
+  document.getElementById('room-view-title').textContent = room.name;
+  var excl = document.getElementById('room-view-exclusive');
+  if (room.isNew) {
+    excl.textContent = '48hr exclusive — public in 46 hours';
+    excl.classList.add('visible');
+  } else {
+    excl.textContent = '';
+    excl.classList.remove('visible');
+  }
+  document.getElementById('room-view-content').textContent = room.content;
+  document.getElementById('room-view').classList.add('open');
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('room-back-btn').addEventListener('click', function() {
+    document.getElementById('room-view').classList.remove('open');
+  });
+  document.getElementById('room-share-btn').addEventListener('click', function() {
+    document.getElementById('room-view').classList.remove('open');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('room-view').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
